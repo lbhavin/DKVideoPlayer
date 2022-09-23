@@ -110,16 +110,20 @@ if (secretPropsFile.exists()) {
 //        }
 //    }
 //}
+//
+//signing {
+//    sign publishing.publications
+//}
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
 
-publishing {
-    publications {
-        release(MavenPublication) {
-            groupId PUBLISH_GROUP_ID
-            artifactId PUBLISH_ARTIFACT_ID
-            version PUBLISH_VERSION
+                groupId PUBLISH_GROUP_ID
+                artifactId PUBLISH_ARTIFACT_ID
+                version PUBLISH_VERSION
+            }
         }
     }
-}
-signing {
-    sign publishing.publications
 }
