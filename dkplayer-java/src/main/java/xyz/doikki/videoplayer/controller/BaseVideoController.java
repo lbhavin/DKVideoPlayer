@@ -37,9 +37,7 @@ import xyz.doikki.videoplayer.util.PlayerUtils;
  * 6.设备方向监听: {@link #onOrientationChanged(int)}
  * Created by Doikki on 2017/4/12.
  */
-public abstract class BaseVideoController extends FrameLayout
-        implements IVideoController,
-        OrientationHelper.OnOrientationChangeListener {
+public abstract class BaseVideoController extends FrameLayout implements IVideoController, OrientationHelper.OnOrientationChangeListener {
 
     //播放器包装类，集合了MediaPlayerControl的api和IVideoController的api
     protected ControlWrapper mControlWrapper;
@@ -121,7 +119,9 @@ public abstract class BaseVideoController extends FrameLayout
         //绑定ControlComponent和Controller
         for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
             IControlComponent component = next.getKey();
-            component.attach(mControlWrapper);
+            if (component != null) {
+                component.attach(mControlWrapper);
+            }
         }
         //开始监听设备方向
         mOrientationHelper.setOnOrientationChangeListener(this);
@@ -293,7 +293,9 @@ public abstract class BaseVideoController extends FrameLayout
      */
     @Override
     public void startProgress() {
-        if (mIsStartProgress) return;
+        if (mIsStartProgress) {
+            return;
+        }
         post(mShowProgress);
         mIsStartProgress = true;
     }
@@ -303,7 +305,9 @@ public abstract class BaseVideoController extends FrameLayout
      */
     @Override
     public void stopProgress() {
-        if (!mIsStartProgress) return;
+        if (!mIsStartProgress) {
+            return;
+        }
         removeCallbacks(mShowProgress);
         mIsStartProgress = false;
     }
@@ -347,7 +351,9 @@ public abstract class BaseVideoController extends FrameLayout
      * 检查是否需要适配刘海
      */
     private void checkCutout() {
-        if (!mAdaptCutout) return;
+        if (!mAdaptCutout) {
+            return;
+        }
         if (mActivity != null && mHasCutout == null) {
             mHasCutout = CutoutUtil.allowDisplayToCutout(mActivity);
             if (mHasCutout) {
@@ -381,8 +387,8 @@ public abstract class BaseVideoController extends FrameLayout
      * 此处默认根据手机网络类型来决定是否显示，开发者可以重写相关逻辑
      */
     public boolean showNetWarning() {
-        return PlayerUtils.getNetworkType(getContext()) == PlayerUtils.NETWORK_MOBILE
-                && !VideoViewManager.instance().playOnMobileNetwork();
+        return PlayerUtils.getNetworkType(
+                getContext()) == PlayerUtils.NETWORK_MOBILE && !VideoViewManager.instance().playOnMobileNetwork();
     }
 
     /**
@@ -405,7 +411,9 @@ public abstract class BaseVideoController extends FrameLayout
      * @return 是否成功进入全屏
      */
     protected boolean startFullScreen() {
-        if (mActivity == null || mActivity.isFinishing()) return false;
+        if (mActivity == null || mActivity.isFinishing()) {
+            return false;
+        }
         mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         mControlWrapper.startFullScreen();
         return true;
@@ -417,7 +425,9 @@ public abstract class BaseVideoController extends FrameLayout
      * @return 是否成功退出全屏
      */
     protected boolean stopFullScreen() {
-        if (mActivity == null || mActivity.isFinishing()) return false;
+        if (mActivity == null || mActivity.isFinishing()) {
+            return false;
+        }
         mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mControlWrapper.stopFullScreen();
         return true;
@@ -433,8 +443,7 @@ public abstract class BaseVideoController extends FrameLayout
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
-        if (mControlWrapper.isPlaying()
-                && (mEnableOrientation || mControlWrapper.isFullScreen())) {
+        if (mControlWrapper.isPlaying() && (mEnableOrientation || mControlWrapper.isFullScreen())) {
             if (hasWindowFocus) {
                 postDelayed(new Runnable() {
                     @Override
@@ -460,7 +469,9 @@ public abstract class BaseVideoController extends FrameLayout
     @CallSuper
     @Override
     public void onOrientationChanged(int orientation) {
-        if (mActivity == null || mActivity.isFinishing()) return;
+        if (mActivity == null || mActivity.isFinishing()) {
+            return;
+        }
 
         //记录用户手机上一次放置的位置
         int lastOrientation = mOrientation;
@@ -475,8 +486,12 @@ public abstract class BaseVideoController extends FrameLayout
         if (orientation > 350 || orientation < 10) {
             int o = mActivity.getRequestedOrientation();
             //手动切换横竖屏
-            if (o == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE && lastOrientation == 0) return;
-            if (mOrientation == 0) return;
+            if (o == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE && lastOrientation == 0) {
+                return;
+            }
+            if (mOrientation == 0) {
+                return;
+            }
             //0度，用户竖直拿着手机
             mOrientation = 0;
             onOrientationPortrait(mActivity);
@@ -484,16 +499,24 @@ public abstract class BaseVideoController extends FrameLayout
 
             int o = mActivity.getRequestedOrientation();
             //手动切换横竖屏
-            if (o == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT && lastOrientation == 90) return;
-            if (mOrientation == 90) return;
+            if (o == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT && lastOrientation == 90) {
+                return;
+            }
+            if (mOrientation == 90) {
+                return;
+            }
             //90度，用户右侧横屏拿着手机
             mOrientation = 90;
             onOrientationReverseLandscape(mActivity);
         } else if (orientation > 260 && orientation < 280) {
             int o = mActivity.getRequestedOrientation();
             //手动切换横竖屏
-            if (o == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT && lastOrientation == 270) return;
-            if (mOrientation == 270) return;
+            if (o == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT && lastOrientation == 270) {
+                return;
+            }
+            if (mOrientation == 270) {
+                return;
+            }
             //270度，用户左侧横屏拿着手机
             mOrientation = 270;
             onOrientationLandscape(mActivity);
@@ -505,9 +528,13 @@ public abstract class BaseVideoController extends FrameLayout
      */
     protected void onOrientationPortrait(Activity activity) {
         //屏幕锁定的情况
-        if (mIsLocked) return;
+        if (mIsLocked) {
+            return;
+        }
         //没有开启设备方向监听的情况
-        if (!mEnableOrientation) return;
+        if (!mEnableOrientation) {
+            return;
+        }
 
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mControlWrapper.stopFullScreen();
@@ -541,10 +568,11 @@ public abstract class BaseVideoController extends FrameLayout
 
     private void handleVisibilityChanged(boolean isVisible, Animation anim) {
         if (!mIsLocked) { //没锁住时才向ControlComponent下发此事件
-            for (Map.Entry<IControlComponent, Boolean> next
-                    : mControlComponents.entrySet()) {
+            for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
                 IControlComponent component = next.getKey();
-                component.onVisibilityChanged(isVisible, anim);
+                if (component != null) {
+                    component.onVisibilityChanged(isVisible, anim);
+                }
             }
         }
         onVisibilityChanged(isVisible, anim);
@@ -561,10 +589,11 @@ public abstract class BaseVideoController extends FrameLayout
     }
 
     private void handlePlayStateChanged(int playState) {
-        for (Map.Entry<IControlComponent, Boolean> next
-                : mControlComponents.entrySet()) {
+        for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
             IControlComponent component = next.getKey();
-            component.onPlayStateChanged(playState);
+            if (component != null) {
+                component.onPlayStateChanged(playState);
+            }
         }
         onPlayStateChanged(playState);
     }
@@ -595,10 +624,11 @@ public abstract class BaseVideoController extends FrameLayout
     }
 
     private void handlePlayerStateChanged(int playerState) {
-        for (Map.Entry<IControlComponent, Boolean> next
-                : mControlComponents.entrySet()) {
+        for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
             IControlComponent component = next.getKey();
-            component.onPlayerStateChanged(playerState);
+            if (component != null) {
+                component.onPlayerStateChanged(playerState);
+            }
         }
         onPlayerStateChanged(playerState);
     }
@@ -633,10 +663,11 @@ public abstract class BaseVideoController extends FrameLayout
     }
 
     private void handleSetProgress(int duration, int position) {
-        for (Map.Entry<IControlComponent, Boolean> next
-                : mControlComponents.entrySet()) {
+        for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
             IControlComponent component = next.getKey();
-            component.setProgress(duration, position);
+            if (component != null) {
+                component.setProgress(duration, position);
+            }
         }
         setProgress(duration, position);
     }
@@ -652,10 +683,11 @@ public abstract class BaseVideoController extends FrameLayout
     }
 
     private void handleLockStateChanged(boolean isLocked) {
-        for (Map.Entry<IControlComponent, Boolean> next
-                : mControlComponents.entrySet()) {
+        for (Map.Entry<IControlComponent, Boolean> next : mControlComponents.entrySet()) {
             IControlComponent component = next.getKey();
-            component.onLockStateChanged(isLocked);
+            if (component != null) {
+                component.onLockStateChanged(isLocked);
+            }
         }
         onLockStateChanged(isLocked);
     }
